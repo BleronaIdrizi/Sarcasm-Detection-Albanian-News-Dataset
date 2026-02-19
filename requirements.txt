@@ -9,3 +9,7 @@ streamlit
 bokeh
 kagglehub
 tabulate
+openai
+python-dotenv
+google-genai
+anthropic
