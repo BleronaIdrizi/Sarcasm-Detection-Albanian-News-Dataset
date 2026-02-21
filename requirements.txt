@@ -13,3 +13,6 @@ openai
 python-dotenv
 google-genai
 anthropic
+torch
+transformers
+datasets
