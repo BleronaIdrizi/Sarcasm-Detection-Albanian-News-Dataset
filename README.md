@@ -39,7 +39,9 @@ The strongest sarcasm detection result comes from a classical linear model rathe
 
 ## Example Usage
 
-After training and exporting the TF-IDF vectorizer and LinearSVC model from `notebooks/03_sarcasm_with_annotation/03d_sarcasm_models_and_evaluation.ipynb`, inference can be run as follows:
+> **Note:** The repository currently ships the fine-tuned DistilBERT checkpoints under `models/`. The TF-IDF vectorizer and LinearSVC artifacts shown below are produced by training and exporting them from `notebooks/03_sarcasm_with_annotation/03d_sarcasm_models_and_evaluation.ipynb` (see Future Work).
+
+After exporting, inference can be run as follows:
 
 ```python
 from joblib import load
@@ -75,7 +77,7 @@ For Jupyter notebooks, make sure the selected kernel/interpreter points to the v
 
 ## Dataset
 
-The raw dataset is downloaded from Kaggle using:
+The raw corpus is the [Kosovo News Articles Dataset](https://www.kaggle.com/datasets/gentrexha/kosovo-news-articles-dataset) (Kaggle, v4), complemented by historical Albanian-language sources from the [FLOSSK](https://flossk.org/) digital archive. The raw dataset is downloaded from Kaggle using:
 
 ```text
 scripts/download_dataset.ipynb
@@ -326,14 +328,14 @@ Metrics reported:
 
 All models are evaluated with **5-fold stratified cross-validation**. The TF-IDF vectorizer is refitted inside each fold on the training portion only (to avoid vocabulary leakage), and the transformer is fine-tuned from scratch on each fold. Each metric is reported as the **mean ± standard deviation across the 5 folds**.
 
-Current results on the balanced sarcasm dataset (mean over 5 folds):
+Current results on the balanced sarcasm dataset (mean ± standard deviation over 5 folds):
 
 | Model | Accuracy | Macro Precision | Macro Recall | Macro F1 |
 |-------|---------:|----------------:|-------------:|---------:|
-| LinearSVC | **0.8305** | **0.8325** | **0.8305** | **0.8303** |
-| MultinomialNB | 0.8133 | 0.8137 | 0.8133 | 0.8133 |
-| LogisticRegression | 0.8130 | 0.8171 | 0.8130 | 0.8123 |
-| DistilBERT multilingual | 0.7972 | 0.7986 | 0.7972 | 0.7970 |
+| LinearSVC | **0.8305 ± 0.0048** | **0.8325 ± 0.0044** | **0.8305 ± 0.0047** | **0.8303 ± 0.0048** |
+| MultinomialNB | 0.8133 ± 0.0070 | 0.8137 ± 0.0073 | 0.8133 ± 0.0070 | 0.8133 ± 0.0070 |
+| LogisticRegression | 0.8130 ± 0.0058 | 0.8171 ± 0.0054 | 0.8130 ± 0.0057 | 0.8123 ± 0.0059 |
+| DistilBERT multilingual | 0.7972 ± 0.0074 | 0.7986 ± 0.0081 | 0.7972 ± 0.0074 | 0.7970 ± 0.0073 |
 
 The best-performing sarcasm detection model is `LinearSVC`, achieving **83.05% accuracy** and **83.03% macro F1-score** averaged over the 5 folds. The fold-to-fold variation is small, so this result is stable rather than an artifact of one particular split. This confirms that TF-IDF features with a linear classifier provide a strong baseline for the balanced sarcasm dataset.
 
@@ -360,14 +362,6 @@ Because every model now uses 5-fold cross-validation, the leaderboard reports no
 - Export the best trained model and vectorizer into `models/` for direct inference.
 - Add a lightweight API or Streamlit demo for interactive sarcasm prediction.
 - Include richer error analysis, such as confusion matrices and examples of false positives/false negatives.
-
-## Suggested Visuals
-
-Recommended visuals to add to the repository or README:
-
-- Bar chart comparing model accuracy and macro F1.
-- Dataset class distribution before and after balancing.
-- Simple pipeline diagram showing preprocessing, labeling, balancing, modeling, and evaluation.
 
 ## Project Structure
 
@@ -408,3 +402,24 @@ The project currently includes:
 For category detection, the best result so far is achieved by `LinearSVC` on the primary-category dataset with **72.37% accuracy** and **69.94% weighted F1-score**.
 
 For sarcasm detection, the best current result is achieved by `LinearSVC` on the final balanced dataset with **83.05% accuracy** and **83.03% macro F1-score** (mean over 5 folds).
+
+## Citation
+
+This repository accompanies the master's thesis:
+
+> Blerona Idrizi, *"Detektimi i sarkazmës dhe klasifikimi i artikujve të lajmeve sipas kategorive në 'Albanian News Dataset' duke përdorur Transformer Models"* (Sarcasm Detection and News Article Category Classification in the Albanian News Dataset using Transformer Models), Master's thesis, Faculty of Electrical and Computer Engineering, University of Prishtina, 2026.
+
+```bibtex
+@mastersthesis{idrizi2026sarcasm,
+  author = {Idrizi, Blerona},
+  title  = {Detektimi i sarkazm{\"e}s dhe klasifikimi i artikujve t{\"e} lajmeve sipas kategorive n{\"e} "Albanian News Dataset" duke p{\"e}rdorur Transformer Models},
+  school = {University of Prishtina, Faculty of Electrical and Computer Engineering},
+  year   = {2026}
+}
+```
+
+## Acknowledgements
+
+- [Kosovo News Articles Dataset](https://www.kaggle.com/datasets/gentrexha/kosovo-news-articles-dataset) by Gent Rexha (Kaggle).
+- [FLOSSK](https://flossk.org/) for the historical Albanian newspaper and book archive used in the bootstrap dataset.
+- Part of the sarcasm annotation used an OpenAI-assisted labeling workflow; heuristic FLOSSK bootstrap labels are documented as such throughout.
