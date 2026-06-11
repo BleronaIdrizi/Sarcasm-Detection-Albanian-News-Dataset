@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project explores sarcasm detection in Albanian news, a low-resource NLP setting where labeled data is limited and context matters a lot. It covers the full workflow from raw news preprocessing and dataset construction to model training, evaluation, and comparison. The best current sarcasm model is **TF-IDF + LinearSVC**, reaching **82.27% accuracy** and **82.22% macro F1-score** on the balanced sarcasm dataset.
+This project explores sarcasm detection in Albanian news, a low-resource NLP setting where labeled data is limited and context matters a lot. It covers the full workflow from raw news preprocessing and dataset construction to model training, evaluation, and comparison. All sarcasm models are now evaluated with **5-fold stratified cross-validation**, reporting each metric as mean ± standard deviation across folds. The best current sarcasm model is **TF-IDF + LinearSVC**, reaching **83.05% accuracy** and **83.03% macro F1-score** on the balanced sarcasm dataset.
 
 ## Highlights
 
@@ -32,7 +32,7 @@ This project explores sarcasm detection in Albanian news, a low-resource NLP set
 
 | Task | Best Model | Accuracy | F1 Score |
 |------|------------|---------:|---------:|
-| Sarcasm Detection | TF-IDF + LinearSVC | **0.8227** | **0.8222 macro F1** |
+| Sarcasm Detection | TF-IDF + LinearSVC | **0.8305** | **0.8303 macro F1** |
 | Category Detection | TF-IDF + LinearSVC | **0.7237** | **0.6994 weighted F1** |
 
 The strongest sarcasm detection result comes from a classical linear model rather than a transformer. In this dataset version, **TF-IDF + LinearSVC** outperforms Logistic Regression, MultinomialNB, and multilingual DistilBERT.
@@ -324,24 +324,26 @@ Metrics reported:
 - Macro recall
 - Macro F1-score
 
-Current results on the balanced sarcasm dataset:
+All models are evaluated with **5-fold stratified cross-validation**. The TF-IDF vectorizer is refitted inside each fold on the training portion only (to avoid vocabulary leakage), and the transformer is fine-tuned from scratch on each fold. Each metric is reported as the **mean ± standard deviation across the 5 folds**.
+
+Current results on the balanced sarcasm dataset (mean over 5 folds):
 
 | Model | Accuracy | Macro Precision | Macro Recall | Macro F1 |
 |-------|---------:|----------------:|-------------:|---------:|
-| LinearSVC | **0.8227** | **0.8259** | **0.8226** | **0.8222** |
-| LogisticRegression | 0.8080 | 0.8145 | 0.8079 | 0.8070 |
-| MultinomialNB | 0.8026 | 0.8030 | 0.8025 | 0.8025 |
-| DistilBERT multilingual | 0.7770 | 0.7785 | 0.7769 | 0.7766 |
+| LinearSVC | **0.8305** | **0.8325** | **0.8305** | **0.8303** |
+| MultinomialNB | 0.8133 | 0.8137 | 0.8133 | 0.8133 |
+| LogisticRegression | 0.8130 | 0.8171 | 0.8130 | 0.8123 |
+| DistilBERT multilingual | 0.7972 | 0.7986 | 0.7972 | 0.7970 |
 
-The best-performing sarcasm detection model in the current run is `LinearSVC`, achieving **82.27% accuracy** and **82.22% macro F1-score**. This result indicates that TF-IDF features with a linear classifier provide a strong baseline for the balanced sarcasm dataset.
+The best-performing sarcasm detection model is `LinearSVC`, achieving **83.05% accuracy** and **83.03% macro F1-score** averaged over the 5 folds. The fold-to-fold variation is small, so this result is stable rather than an artifact of one particular split. This confirms that TF-IDF features with a linear classifier provide a strong baseline for the balanced sarcasm dataset.
 
 The transformer model (`distilbert-base-multilingual-cased`) performs below the classical linear baselines in this experiment. This may be influenced by the relatively small balanced dataset size, the heuristic nature of part of the FLOSSK bootstrap data, and the computationally constrained fine-tuning setup. The transformer result remains useful as a contextual baseline, but the current evidence suggests that the TF-IDF + LinearSVC approach is the strongest model for this dataset version.
 
-Confusion-matrix analysis of the best model shows that `LinearSVC` is slightly stronger at recognizing **non-sarcastic** texts than **sarcastic** ones. It correctly classifies **239 of 274 non-sarcastic examples (87.2%)**, while **35 cases (12.8%)** are incorrectly predicted as sarcastic.
+Confusion-matrix analysis of the best model uses the **aggregated out-of-fold predictions**, so every example in the dataset is counted exactly once using the prediction from the fold where it was held out. `LinearSVC` is slightly stronger at recognizing **non-sarcastic** texts than **sarcastic** ones. It correctly classifies **1,185 of 1,366 non-sarcastic examples (86.7%)**, while **181 cases (13.3%)** are incorrectly predicted as sarcastic.
 
-For the **sarcastic** class, the model correctly identifies **211 of 273 examples (77.3%)**, while **62 cases (22.7%)** are misclassified as non-sarcastic. This suggests that the remaining errors are concentrated more heavily on sarcastic texts, which is consistent with the higher contextual ambiguity of sarcasm in Albanian news language.
+For the **sarcastic** class, the model correctly identifies **1,084 of 1,366 examples (79.4%)**, while **282 cases (20.6%)** are misclassified as non-sarcastic. This suggests that the remaining errors are concentrated more heavily on sarcastic texts, which is consistent with the higher contextual ambiguity of sarcasm in Albanian news language.
 
-All sarcasm results are based on a single stratified train/test split. Therefore, the reported standard deviation values in the leaderboard are `0.0`, unlike the category detection experiments where classical models are evaluated with 5-fold cross-validation.
+Because every model now uses 5-fold cross-validation, the leaderboard reports non-zero standard deviation columns, matching the evaluation protocol used in the category detection experiments. Out-of-fold predictions from the transformer run are also saved to `data/sarcasm_balanced_predictions_v1.csv`.
 
 ## Limitations
 
@@ -349,13 +351,12 @@ All sarcasm results are based on a single stratified train/test split. Therefore
 - Part of the sarcasm dataset comes from FLOSSK heuristic bootstrap labels, so labeling quality may vary.
 - Transformer experiments were computationally constrained and not fully optimized with extensive GPU training.
 - Sarcasm is highly context-dependent, especially in news and political language, so some labels may be ambiguous.
-- Current sarcasm results are based on a single stratified train/test split rather than repeated cross-validation.
 
 ## Future Work
 
 - Fine-tune transformer models on GPU with larger batches, more epochs, and better hyperparameter search.
 - Expand the manually reviewed sarcasm dataset to improve label quality and reduce heuristic noise.
-- Add repeated cross-validation or multiple random seeds for more robust sarcasm evaluation.
+- Add multiple random seeds on top of the current 5-fold cross-validation for even more robust sarcasm evaluation.
 - Export the best trained model and vectorizer into `models/` for direct inference.
 - Add a lightweight API or Streamlit demo for interactive sarcasm prediction.
 - Include richer error analysis, such as confusion matrices and examples of false positives/false negatives.
@@ -402,8 +403,8 @@ The project currently includes:
 - A labeled sarcasm annotation workflow
 - FLOSSK historical source synchronization for heuristic sarcasm bootstrap examples
 - A final 50/50 balanced sarcasm dataset with **2,732 rows**
-- A sarcasm modeling notebook with TF-IDF baselines and a multilingual DistilBERT experiment
+- A sarcasm modeling notebook with TF-IDF baselines and a multilingual DistilBERT experiment, all evaluated with 5-fold stratified cross-validation
 
 For category detection, the best result so far is achieved by `LinearSVC` on the primary-category dataset with **72.37% accuracy** and **69.94% weighted F1-score**.
 
-For sarcasm detection, the best current result is achieved by `LinearSVC` on the final balanced dataset with **82.27% accuracy** and **82.22% macro F1-score**.
+For sarcasm detection, the best current result is achieved by `LinearSVC` on the final balanced dataset with **83.05% accuracy** and **83.03% macro F1-score** (mean over 5 folds).
