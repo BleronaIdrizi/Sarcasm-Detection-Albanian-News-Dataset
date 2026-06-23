@@ -1,0 +1,590 @@
+%================================================
+% Master Thesis — University of Prishtina (FIEK)
+% Author  : Blerona Idrizi
+% Topic   : Sarcasm Detection and News Article Category
+%           Classification in Albanian News Dataset
+%           Using Transformer Models
+% Date    : June 2026
+%================================================
+\documentclass[12pt,a4paper]{article}
+
+%--- Encoding & Fonts ---------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+%--- Page Geometry ------------------------------
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm]{geometry}
+
+%--- Line Spacing & Paragraph -------------------
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0.4em}
+
+%--- Mathematics --------------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%--- Tables -------------------------------------
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+
+%--- Figures ------------------------------------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+%--- Code Listings ------------------------------
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codebg}{rgb}{0.96,0.96,0.96}
+\definecolor{codegreen}{rgb}{0.0,0.5,0.0}
+\definecolor{codepurple}{rgb}{0.55,0.0,0.55}
+\definecolor{codeorange}{rgb}{0.8,0.3,0.0}
+\definecolor{codegray}{rgb}{0.45,0.45,0.45}
+
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{codebg},
+    commentstyle=\color{codegreen}\itshape,
+    keywordstyle=\color{codepurple}\bfseries,
+    stringstyle=\color{codeorange},
+    numberstyle=\tiny\color{codegray},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=6pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{black!20},
+    language=Python
+}
+
+%--- Bibliography -------------------------------
+\usepackage{natbib}
+\bibliographystyle{ieeetr}
+
+%--- Hyperlinks ---------------------------------
+\usepackage[colorlinks=true,
+            linkcolor=black,
+            citecolor=black,
+            urlcolor=blue]{hyperref}
+
+%--- Header / Footer ----------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Sarcasm Detection in Albanian News}
+\fancyhead[R]{\small Blerona Idrizi}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%--- Miscellaneous ------------------------------
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.6em}{}
+
+%================================================
+\begin{document}
+
+%--- Title Page ---------------------------------
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1.2cm}
+        {\large \textbf{University of Prishtina ``Hasan Prishtina''}}\\[0.3cm]
+        {\large Faculty of Electrical and Computer Engineering (FIEK)}\\[0.3cm]
+        {\large Department of Computer and Software Engineering}\\[1.5cm]
+
+        \rule{\linewidth}{0.5mm}\\[0.4cm]
+        {\LARGE \bfseries Sarcasm Detection and News Article Category Classification in Albanian News Dataset Using Transformer Models}\\[0.4cm]
+        \rule{\linewidth}{0.5mm}\\[1.2cm]
+
+        {\large \textit{Master's Thesis submitted in partial fulfilment of the requirements for the degree of Master of Science in Computer and Software Engineering}}\\[2cm]
+
+        \begin{minipage}[t]{0.45\textwidth}
+            \begin{flushleft}
+                \textbf{Author:}\\
+                Blerona Idrizi
+            \end{flushleft}
+        \end{minipage}
+        \hfill
+        \begin{minipage}[t]{0.45\textwidth}
+            \begin{flushright}
+                \textbf{Supervisor:}\\
+                Prof.\ Dr.\ Avni Rexhepi
+            \end{flushright}
+        \end{minipage}
+
+        \vfill
+        {\large Prishtina, June 2026}
+    \end{center}
+\end{titlepage}
+
+%--- Abstract -----------------------------------
+\newpage
+\thispagestyle{plain}
+\begin{center}
+    \Large\bfseries Abstract
+\end{center}
+\vspace{0.5cm}
+
+Natural Language Processing (NLP) has witnessed remarkable growth over the past decade, yet the automatic understanding of figurative language remains one of its most persistent challenges. Sarcasm, a form of verbal irony in which the intended meaning is opposite to or markedly different from the literal meaning of the utterance, poses particular difficulties for computational systems because it relies on contextual, pragmatic, and cultural knowledge that is difficult to encode in standard representations. This challenge is further compounded for low-resource languages such as Albanian, where annotated corpora, pre-trained language models, and dedicated NLP infrastructure remain scarce.
+
+This thesis investigates sarcasm detection and news article category classification in Albanian, using a large-scale real-world news corpus as the primary data source. The work makes three principal contributions. First, a reproducible data collection and preprocessing pipeline is constructed that transforms a raw dataset of approximately 2.59 million Albanian news articles into a clean corpus of 1.46 million records, removing duplicates, missing values, and inconsistencies. Second, a balanced binary sarcasm dataset of 2,732 samples (1,366 sarcastic and 1,366 non-sarcastic) is constructed for Albanian---to the best of the author's knowledge the first publicly documented dataset of its kind---by combining an OpenAI-assisted annotation workflow with heuristic labelling derived from historical Albanian sources. Third, multiple machine learning approaches are evaluated, ranging from classical TF-IDF-based models (LinearSVC, Logistic Regression, Multinomial Naive Bayes) to multilingual Transformer architectures (XLM-RoBERTa, DistilBERT multilingual), under a rigorous five-fold stratified cross-validation protocol.
+
+The experimental results confirm the central hypothesis of this work: under conditions of limited annotated data, classical linear models with TF-IDF features remain highly competitive and even outperform multilingual Transformer models. LinearSVC achieves 83.05\% accuracy and 83.03\% macro F1 on the sarcasm task, surpassing DistilBERT multilingual (79.72\%). The same trend holds for category classification over 181 primary classes, where LinearSVC reaches 72.37\% accuracy versus 60.61\% for XLM-RoBERTa. These findings have practical implications for NLP practitioners working with low-resource languages, demonstrating that powerful Transformer-based solutions are not always warranted when annotated data are scarce.
+
+\textbf{Keywords:} sarcasm detection, Albanian NLP, low-resource languages, text classification, TF-IDF, LinearSVC, XLM-RoBERTa, DistilBERT, Transformer models, news classification.
+
+%--- Table of Contents --------------------------
+\newpage
+\tableofcontents
+
+%================================================
+\newpage
+\section{Introduction}
+\label{sec:introduction}
+
+The rapid expansion of digital news consumption has transformed the information landscape, generating unprecedented volumes of textual content that demand automated analysis. Natural Language Processing provides the computational tools necessary to mine, classify, and interpret this content at scale. Advances in deep learning and, more recently, large pre-trained language models have pushed the state of the art on tasks such as machine translation, question answering, named entity recognition, and sentiment analysis to near-human levels of performance for well-resourced languages \citep{devlin2019bert, vaswani2017attention}. Nevertheless, figurative language---encompassing metaphor, irony, and sarcasm---continues to represent a frontier where computational approaches struggle to match human understanding.
+
+Sarcasm occupies a special place within figurative language because the gap between literal and intended meaning is deliberately exploited for communicative effect. A sarcastic statement is one where the speaker says something positive while meaning something negative, or vice versa, often to criticise, mock, or humourise. For computational systems, this implies that surface-level lexical features alone are insufficient; a model must capture pragmatic incongruity, tonal shifts, and contextual anomalies to detect sarcasm reliably \citep{riloff2013sarcasm}. This difficulty is compounded in the domain of written news articles, where the absence of prosodic cues, emojis, or hashtags (which are frequently exploited in social media-based sarcasm detection) forces models to rely entirely on textual content.
+
+The Albanian language presents an additional layer of challenge. With approximately 7--8 million speakers primarily concentrated in Kosovo, Albania, and surrounding regions, Albanian is classified as a low-resource language in the NLP community. Existing work in Albanian NLP has focused predominantly on tasks such as morphological analysis, part-of-speech tagging, and general sentiment analysis, leaving figurative language understanding virtually unexplored. No publicly documented, annotated dataset for Albanian sarcasm detection existed prior to this work, and no study has systematically benchmarked machine learning approaches---classical or Transformer-based---on this task.
+
+This thesis addresses these gaps through a structured research programme. Starting from a large publicly available corpus of Kosovo news articles \citep{gentrexha2023kosovo} comprising approximately 2.59 million records, a multi-stage preprocessing and annotation pipeline is developed to produce a clean, balanced sarcasm dataset. The study then evaluates a range of models spanning the spectrum from interpretable classical approaches (LinearSVC, Logistic Regression, Multinomial Naive Bayes) to state-of-the-art multilingual Transformer architectures (XLM-RoBERTa \citep{conneau2020unsupervised}, DistilBERT multilingual \citep{sanh2019distilbert}).
+
+The thesis also conducts a parallel investigation into multi-class category classification of Albanian news articles, serving both as a validation of the preprocessing pipeline and as a baseline benchmark for the Albanian text classification landscape. This task, involving up to 274 category classes, provides a complementary perspective on model performance under conditions of high label diversity.
+
+The central hypothesis motivating this work is that, under limited annotated data, classical linear models with TF-IDF features may be competitive with or superior to large multilingual Transformer models. This hypothesis runs counter to the prevailing narrative that Transformer-based models universally dominate NLP benchmarks, and it has direct practical significance for researchers and practitioners working with low-resource languages. The experimental results reported in this thesis confirm this hypothesis, demonstrating that LinearSVC with TF-IDF achieves 83.05\% accuracy on the sarcasm task compared to 79.72\% for DistilBERT multilingual.
+
+The remainder of this thesis is organised as follows. Section~\ref{sec:background} surveys the theoretical background and related work. Section~\ref{sec:rq} states the research questions and objectives. Section~\ref{sec:methodology} describes the methodology. Section~\ref{sec:category} reports category classification results. Section~\ref{sec:dataset_construction} details the sarcasm dataset construction. Section~\ref{sec:sarcasm_results} presents the sarcasm detection experiments and results. Section~\ref{sec:discussion} discusses key findings and limitations. Section~\ref{sec:conclusions} concludes and outlines future work.
+
+%================================================
+\newpage
+\section{Background and Related Work}
+\label{sec:background}
+
+\subsection{Natural Language Processing and Text Classification}
+\label{subsec:nlp_background}
+
+Text classification is one of the foundational tasks in NLP, encompassing any problem where a textual input must be assigned to one or more predefined categories. Historically, classical machine learning pipelines dominated this task. The standard approach involves two stages: feature extraction and classification. Feature extraction transforms raw text into numerical representations. Two widely used representations are the Bag-of-Words (BoW) model, which encodes documents as unordered counts of word occurrences, and Term Frequency--Inverse Document Frequency (TF-IDF), which re-weights word counts by their discriminative power across the corpus. Formally, the TF-IDF weight for term $t$ in document $d$ within a corpus $D$ is:
+
+\begin{equation}
+    \text{tfidf}(t, d, D) = \text{tf}(t, d) \times \log\frac{|D|}{|\{d \in D : t \in d\}|}
+    \label{eq:tfidf}
+\end{equation}
+
+where $\text{tf}(t, d)$ is the raw count of term $t$ in document $d$, $|D|$ is the total number of documents, and the denominator is the document frequency of $t$ \citep{pedregosa2011scikit}.
+
+Classifiers operating on TF-IDF representations have shown strong performance across a variety of text categorisation tasks. Among them, LinearSVC---a linear Support Vector Machine trained using a squared hinge loss---is particularly effective for high-dimensional sparse text features due to its regularisation properties and computational efficiency. Logistic Regression provides a probabilistic extension with similar linear decision boundaries. Multinomial Naive Bayes exploits conditional independence assumptions to achieve very fast training and competitive performance even on small datasets.
+
+The Transformer architecture \citep{vaswani2017attention} represents a paradigm shift in NLP. By replacing recurrent sequential processing with self-attention mechanisms, Transformers can model long-range dependencies in text without the vanishing gradient problems of RNNs. The attention mechanism computes, for each token in a sequence, a weighted sum of all other tokens' representations, with weights determined by learned query-key dot products:
+
+\begin{equation}
+    \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+    \label{eq:attention}
+\end{equation}
+
+where $Q$, $K$, and $V$ are query, key, and value matrices and $d_k$ is the dimensionality of the key vectors. BERT \citep{devlin2019bert} demonstrated that large Transformer models pre-trained on massive unlabelled corpora via masked language modelling and next-sentence prediction tasks could be fine-tuned on downstream tasks with relatively small labelled datasets, establishing a new paradigm for transfer learning in NLP.
+
+\subsection{Sarcasm as a Linguistic Phenomenon}
+\label{subsec:sarcasm_linguistics}
+
+Sarcasm is a specific form of verbal irony characterised by the use of words that mean the opposite of what the speaker intends, typically to mock or convey contempt. Linguists distinguish sarcasm from other forms of irony primarily by its interpersonal target and tone: while irony may be gentle or observational, sarcasm is typically cutting or derisive \citep{riloff2013sarcasm}. For computational purposes, both are often treated under the umbrella of irony detection, though some researchers maintain a distinction.
+
+The central challenge of sarcasm detection stems from the fact that sarcastic utterances are, by design, indistinguishable from sincere ones when considered purely at the level of literal propositional content. A sarcastic headline such as ``The government's new policy has once again exceeded all expectations'' contains no lexical indicator that the intended meaning is negative. Detection requires understanding the broader context: knowledge of the entity being described, the broader political situation, stylistic incongruities, and cultural pragmatics.
+
+This context-dependence makes sarcasm particularly difficult to annotate consistently. Human annotators frequently disagree on whether a given text is sarcastic, especially in formal written registers such as journalism, where sarcasm is used strategically and subtly. The absence of paralinguistic cues (tone of voice, facial expression) further increases ambiguity. In the domain of Albanian news, these challenges are exacerbated by the absence of computational resources---no sarcasm lexicons, no annotated corpora, no task-specific pre-trained models exist for Albanian.
+
+\subsection{Low-Resource Languages and Albanian NLP}
+\label{subsec:low_resource}
+
+The designation ``low-resource'' in NLP refers to languages for which the combination of labelled training data, pre-trained models, linguistic tools, and active research communities falls significantly below that of dominant languages such as English, Chinese, or Spanish \citep{hedderich2021survey}. Albanian meets this criterion along multiple dimensions. While grammatically well-documented by linguists, computational resources for Albanian are limited: there are no large-scale monolingual language models trained exclusively on Albanian, few annotated corpora for tasks beyond POS tagging and morphological analysis, and a small but growing research community.
+
+Multilingual Transformer models offer a potential remedy. XLM-RoBERTa \citep{conneau2020unsupervised} is pre-trained on 2.5 terabytes of CommonCrawl data spanning 100 languages, including Albanian, using a RoBERTa-style masked language modelling objective. By sharing a single model across languages, XLM-RoBERTa learns representations that can be transferred across linguistic boundaries, enabling zero-shot or few-shot adaptation to low-resource target languages. DistilBERT multilingual \citep{sanh2019distilbert} applies knowledge distillation to produce a 40\% smaller and 60\% faster model that retains approximately 97\% of BERT's performance.
+
+However, the promise of multilingual Transformers for low-resource languages is not unconditional. \citet{hedderich2021survey} survey a range of approaches---cross-lingual transfer, data augmentation, weak supervision, and semi-supervised learning---and note that the benefit of large models depends critically on the volume of fine-tuning data. When labelled data are scarce, the signal from fine-tuning may be insufficient to overcome the inductive biases of the pre-trained model, and simpler methods may generalise better. This observation is central to the hypothesis investigated in this thesis.
+
+\subsection{Related Work in Sarcasm Detection}
+\label{subsec:related_work}
+
+Sarcasm detection has been studied most extensively for English, where annotated datasets drawn from platforms such as Twitter and Reddit are widely available. \citet{riloff2013sarcasm} proposed a bootstrapping approach that exploits the contrast between positive sentiment words and negative situation phrases as a signal for sarcasm, achieving strong results on product reviews and Twitter data. \citet{poria2016deeper} applied deep convolutional neural networks to sarcastic tweets, demonstrating that learned feature hierarchies outperform hand-crafted features. \citet{ghosh2016fracking} explored recurrent neural networks and attention mechanisms for sarcasm in Twitter data, finding that contextual modelling yields consistent improvements.
+
+\citet{joshi2017automatic} provide a comprehensive survey of automatic sarcasm detection, cataloguing approaches ranging from rule-based and lexical methods through classical ML pipelines to deep learning architectures. Their survey highlights that the task remains unsolved even for English, with state-of-the-art systems achieving human-comparable performance only on narrow domains and under controlled conditions.
+
+Work on sarcasm detection for languages other than English is sparse. Several studies have addressed Arabic, Chinese, and Hindi, typically adapting English-language methodologies with language-specific lexicons or corpora. For Albanian, no published study on sarcasm detection was found in the literature prior to this work. The Albanian NLP literature is limited to morphological analysis, machine translation, and sentiment analysis \citep{hedderich2021survey}, leaving figurative language understanding as an open research area.
+
+The contribution of this thesis is therefore twofold: it introduces the first documented Albanian sarcasm dataset and conducts the first systematic evaluation of sarcasm detection models for Albanian, providing a baseline that future work can build upon.
+
+%================================================
+\newpage
+\section{Research Questions and Objectives}
+\label{sec:rq}
+
+The overarching goal of this thesis is to investigate the feasibility of automatic sarcasm detection in Albanian news text and to benchmark machine learning approaches under realistic low-resource conditions. Three research questions guide the investigation:
+
+\vspace{0.5em}
+\noindent\textbf{RQ1: How effective are classical machine learning models for sarcasm detection in Albanian news text?}
+
+Classical approaches based on TF-IDF feature representations and linear classifiers have demonstrated strong performance across diverse text classification tasks. It is not clear, however, whether these models can capture the pragmatic incongruities characteristic of sarcasm in Albanian news, particularly given the absence of task-specific linguistic resources. This question assesses the absolute performance of classical models and provides a baseline against which more complex approaches can be measured.
+
+\vspace{0.5em}
+\noindent\textbf{RQ2: How do classical machine learning models compare to multilingual Transformer models for sarcasm detection under limited annotated data?}
+
+Multilingual Transformer models such as XLM-RoBERTa and DistilBERT multilingual have set new state-of-the-art benchmarks across many NLP tasks. However, their fine-tuning typically requires substantial labelled data to be effective. Under the data constraints inherent to this study---a balanced dataset of 2,732 samples---it is an open question whether the contextual representations learned by Transformer models can be effectively adapted, or whether the simpler inductive bias of linear models proves more advantageous.
+
+\vspace{0.5em}
+\noindent\textbf{RQ3: Can a stable and reproducible pipeline be constructed to create, clean, and balance an Albanian sarcasm dataset?}
+
+A prerequisite for any supervised learning study is a labelled dataset. For Albanian sarcasm detection, no such dataset existed. This question addresses the methodological challenge of constructing one from available sources, combining automated annotation assistance, heuristic labelling, and systematic balancing, in a way that is transparent, documented, and reproducible.
+
+\vspace{1em}
+\noindent The objectives derived from these research questions are:
+
+\begin{enumerate}[leftmargin=1.5em, itemsep=0.2em]
+    \item To construct a preprocessing pipeline capable of transforming the raw Albanian news corpus into a clean, analysis-ready dataset.
+    \item To build a balanced Albanian sarcasm dataset by combining OpenAI-assisted annotation and heuristic labelling from historical sources.
+    \item To implement and evaluate classical ML models (LinearSVC, Logistic Regression, Multinomial Naive Bayes) with TF-IDF features for both sarcasm detection and category classification.
+    \item To implement and evaluate multilingual Transformer models (XLM-RoBERTa, DistilBERT multilingual) on the same tasks under identical evaluation conditions.
+    \item To compare model performance using rigorous cross-validation and to perform error analysis to understand failure modes.
+    \item To document all findings and release the dataset and pipeline to support future Albanian NLP research.
+\end{enumerate}
+
+%================================================
+\newpage
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Dataset Description}
+\label{subsec:dataset_desc}
+
+The primary data source for this study is the Kosovo News Articles Dataset published on Kaggle by Gentrexha \citep{gentrexha2023kosovo}. This corpus contains approximately 2.59 million news articles scraped from a range of Kosovo-based Albanian-language news portals. Each record is characterised by the following fields: \texttt{content} (the full article body), \texttt{title} (the article headline), \texttt{category} (one or more comma-separated topical labels), \texttt{date} (publication date), \texttt{author}, and \texttt{source} (the originating news outlet).
+
+Initial inspection of the raw corpus revealed several data quality issues. Approximately 613,000 records were found to be exact or near-exact duplicates, likely arising from content syndication across news portals. More than 26,000 records had missing or empty \texttt{category} fields, and over 10,000 records had missing \texttt{content}. The raw dataset also exhibited a highly fragmented category taxonomy, with 1,235 unique category label combinations, many of which were semantically redundant variants of the same underlying topic. These issues motivated a systematic preprocessing and cleaning pipeline, described in the following subsection.
+
+\subsection{Data Preprocessing Pipeline}
+\label{subsec:preprocessing}
+
+The preprocessing pipeline was implemented in Python using pandas and scikit-learn \citep{pedregosa2011scikit}. The pipeline consists of the following sequential stages:
+
+\begin{enumerate}[leftmargin=1.5em, itemsep=0.3em]
+    \item \textbf{Missing value removal.} All records with missing values in the \texttt{content} or \texttt{category} columns were removed. This step eliminated approximately 36,000 records.
+
+    \item \textbf{Duplicate removal.} Exact duplicates---records where both the \texttt{title} and \texttt{content} fields were identical---were identified and removed, retaining a single representative instance. This step reduced the corpus by approximately 613,000 records.
+
+    \item \textbf{Column consolidation.} A unified \texttt{text} field was created by concatenating the article \texttt{title} and \texttt{content}, separated by a space. This combined representation provides richer context for downstream models and ensures that headline-level sarcastic signals are not lost when classifying on content alone.
+
+    \item \textbf{Text normalisation.} All text was converted to lowercase. URLs, HTML tags, and extraneous whitespace were removed using regular expressions. No aggressive stop-word removal or stemming was applied at this stage, since the downstream models handle vocabulary selection implicitly via TF-IDF weighting.
+
+    \item \textbf{Category standardisation.} For the category classification task, two configurations were derived from the cleaned corpus: (i) \textit{multi-label} categories, where each article retains all its original comma-separated category labels (274 classes with $\geq$50 samples each); and (ii) \textit{primary} category, where only the first listed category is retained (181 classes with $\geq$50 samples each).
+\end{enumerate}
+
+Table~\ref{tab:preprocessing} summarises the corpus statistics at each stage of the pipeline.
+
+\begin{table}[H]
+    \centering
+    \caption{Corpus statistics before and after preprocessing.}
+    \label{tab:preprocessing}
+    \begin{tabular}{lrcc}
+        \toprule
+        \textbf{Stage} & \textbf{Rows} & \textbf{Duplicates} & \textbf{Missing (category)} \\
+        \midrule
+        Raw corpus          & 2{,}593{,}450 & $\approx$613{,}000 & $\approx$26{,}000 \\
+        After preprocessing & 1{,}460{,}000 & 0                  & 0                 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The preprocessing pipeline removed approximately 44\% of the raw records, resulting in a clean corpus of 1.46 million articles available for both the category classification and sarcasm dataset construction tasks.
+
+\subsection{Approaches: Classical ML vs.\ Transformers}
+\label{subsec:approaches}
+
+Two families of models are evaluated in this study.
+
+\paragraph{Classical Machine Learning.}
+The classical pipeline follows a standard TF-IDF vectorisation plus linear classification architecture. TF-IDF vectors are computed over character $n$-grams (unigrams and bigrams) to partially capture morphological variation in Albanian, with a maximum vocabulary size of 50,000 features and sub-linear TF scaling. Three classifiers are evaluated:
+
+\begin{itemize}[itemsep=0.2em]
+    \item \textbf{LinearSVC:} A Support Vector Machine with a linear kernel optimised using a squared hinge loss. Regularisation is controlled by the hyperparameter $C$, set to $C=1.0$ after preliminary grid search.
+    \item \textbf{Logistic Regression (SGD):} A logistic regression model trained with stochastic gradient descent, using $\ell_2$ regularisation. This model is computationally efficient and provides probabilistic class scores.
+    \item \textbf{Multinomial Naive Bayes (MNB):} A generative classifier that models the conditional distribution of word counts given the class label using a multinomial assumption. MNB is particularly efficient for high-dimensional sparse data.
+\end{itemize}
+
+\paragraph{Transformer Models.}
+Two multilingual Transformer architectures are evaluated:
+
+\begin{itemize}[itemsep=0.2em]
+    \item \textbf{XLM-RoBERTa} \citep{conneau2020unsupervised}: A 125-million-parameter cross-lingual Transformer pre-trained on 2.5TB of filtered CommonCrawl text in 100 languages. Fine-tuning adds a classification head over the \texttt{[CLS]} token representation and trains the full model end-to-end. Input sequences are truncated to 512 tokens.
+    \item \textbf{DistilBERT multilingual} \citep{sanh2019distilbert}: A 66-million-parameter distilled version of multilingual BERT, covering 104 languages. Fine-tuning follows the same protocol as XLM-RoBERTa, with a batch size of 16 and learning rate of $2\times10^{-5}$ over 3 epochs.
+\end{itemize}
+
+The Transformer experiments use the HuggingFace Transformers library \citep{wolf2020transformers}. Fine-tuning is performed on the full training split for each cross-validation fold, using a single NVIDIA GPU.
+
+\subsection{Evaluation Protocol}
+\label{subsec:evaluation}
+
+Given the relatively small size of the sarcasm dataset (2,732 samples), a single train/test split would yield unstable performance estimates. A five-fold stratified cross-validation scheme is therefore adopted for all sarcasm detection experiments. The dataset is partitioned into five folds with stratification on the \texttt{is\_sarcasm} label and a fixed random seed (\texttt{random\_state=42}), ensuring each fold contains approximately equal proportions of sarcastic and non-sarcastic examples. Model performance is reported as the mean across all five folds.
+
+Performance metrics include accuracy, macro-averaged F1 score, macro-averaged precision, and macro-averaged recall. Macro averaging weights each class equally regardless of sample count, which is appropriate for a balanced binary dataset. For the category classification task, which uses a larger dataset, a single stratified 80/20 train/test split is employed, consistent with standard practice for large-scale multi-class classification.
+
+%================================================
+\newpage
+\section{Category Classification}
+\label{sec:category}
+
+\subsection{Task Configuration}
+\label{subsec:category_config}
+
+Category classification serves two roles in this thesis: as a validation of the preprocessing pipeline and as a baseline benchmark for Albanian news text classification. The task is formulated as single-label multi-class classification, where each article must be assigned to one of a large number of topical categories.
+
+Two configurations are considered. In the \textit{primary category} configuration, each article is labelled with its first-listed category from the original metadata, yielding 181 classes after filtering out those with fewer than 50 samples. In the \textit{multi-label} configuration, each article retains all its original category labels, yielding 274 unique label combinations after the same frequency threshold. The primary configuration is cleaner and more straightforward for standard classifiers; the multi-label configuration reflects the messy, overlapping nature of real-world editorial categorisation.
+
+For both configurations, TF-IDF features are extracted from the combined \texttt{text} field (title plus content). Transformer models are evaluated only on the primary configuration due to the computational cost of fine-tuning on the full corpus.
+
+The high number of output classes in both configurations makes this a challenging benchmark. For comparison, standard English news classification datasets such as AG News contain only 4 classes; Reuters-21578 has around 90. Achieving reasonable performance across 181 or 274 classes from a single TF-IDF representation is a non-trivial objective.
+
+\subsection{Results and Discussion}
+\label{subsec:category_results}
+
+Table~\ref{tab:category} reports the classification results for all evaluated models on the primary (181-class) and multi-label (274-class) configurations. All figures are evaluated on a held-out test set representing 20\% of the preprocessed corpus.
+
+\begin{table}[H]
+    \centering
+    \caption{Category classification results on Albanian news articles.}
+    \label{tab:category}
+    \begin{tabular}{llcc}
+        \toprule
+        \textbf{Model} & \textbf{Configuration} & \textbf{Accuracy (\%)} & \textbf{Macro F1 (\%)} \\
+        \midrule
+        LinearSVC       & Primary (181 cls)      & 72.37 & 69.94 \\
+        SGD-LogReg      & Primary (181 cls)      & 65.58 & ---   \\
+        XLM-RoBERTa     & Primary (181 cls)      & 60.61 & ---   \\
+        MultinomialNB   & Primary (181 cls)      & 54.00 & ---   \\
+        LinearSVC       & Multi-label (274 cls)  & 69.75 & ---   \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+LinearSVC achieves the highest accuracy at 72.37\% (macro F1: 69.94\%) on the primary 181-class configuration. This result is notably strong given the large label space; a random baseline would achieve less than 0.6\%. SGD-Logistic Regression reaches 65.58\%, while Multinomial Naive Bayes scores 54.00\%, consistent with the literature showing MNB to be competitive but generally inferior to margin-based methods on fine-grained classification tasks.
+
+Most strikingly, XLM-RoBERTa achieves only 60.61\% accuracy, significantly below LinearSVC. This finding runs counter to expectations for a model pre-trained on Albanian text as part of a 100-language corpus. Several explanations are plausible. First, the category labels in the Albanian corpus are editorially defined and may not correspond cleanly to the semantic categories learned during XLM-RoBERTa's pre-training. Second, the fine-tuning data, though large in absolute terms, is distributed across 181 classes, leaving some classes with limited training examples. Third, the truncation of articles to 512 tokens may discard informative content from longer pieces. These factors suggest that the structural advantage of TF-IDF over the full article---which is not subject to sequence length constraints---may account for a portion of the performance gap.
+
+On the multi-label 274-class configuration, LinearSVC achieves 69.75\% accuracy, a modest but expected decrease relative to the primary configuration, reflecting the greater complexity of the label space.
+
+%================================================
+\newpage
+\section{Sarcasm Dataset Construction}
+\label{sec:dataset_construction}
+
+\subsection{Annotation Workflow}
+\label{subsec:annotation}
+
+The construction of a labelled Albanian sarcasm dataset is a central methodological contribution of this thesis. The absence of any pre-existing annotated resource for this task necessitated a novel, multi-source annotation strategy, which is described below.
+
+\paragraph{Stage 1: Corpus subset selection.}
+From the 1.46 million clean articles in the preprocessed corpus, a subset of candidate articles was selected for sarcasm annotation. Candidates were drawn primarily from categories identified as more likely to contain satirical or opinion-driven content, including political commentary, social affairs, and cultural criticism. Articles that were very short (fewer than 50 words) or purely factual in nature (e.g., sports scores, weather reports) were excluded from the candidate pool.
+
+\paragraph{Stage 2: OpenAI-assisted labelling.}
+Labelling 1.46 million articles manually is infeasible for a single researcher. An OpenAI-assisted annotation workflow was therefore developed in which batches of candidate articles were submitted to a large language model with a structured prompt requesting a binary sarcasm judgement (\texttt{0} for non-sarcastic, \texttt{1} for sarcastic) along with a brief explanation. The workflow was designed to be resumable, with intermediate results saved after each batch to prevent data loss. The resulting labels are semi-automatic rather than fully manual, which is an acknowledged limitation discussed in Section~\ref{sec:discussion}.
+
+\paragraph{Stage 3: Enrichment with FLOSSK historical sources.}
+To supplement the OpenAI-labelled data, a second source of sarcastic examples was incorporated from FLOSSK (Foundation for Open Source Software Kosovo) historical Albanian textual archives. These sources were labelled using a heuristic distant supervision strategy: articles containing lexical markers associated with irony and sarcasm in Albanian---such as specific adversative constructions, intensifiers, and irony-signal phrases---were assigned a positive sarcasm label. This approach is acknowledged as weak supervision and introduces noise; however, it allows the dataset to be enriched beyond what the OpenAI annotation workflow alone could provide.
+
+\paragraph{Stage 4: Merging and standardisation.}
+The OpenAI-labelled and FLOSSK-heuristic subsets were merged into a single dataset with standardised columns: \texttt{content} (article body), \texttt{source} (originating corpus), and \texttt{is\_sarcasm} (binary label). Duplicate records across sources were removed. The merged dataset before balancing was heavily skewed towards the non-sarcastic class, consistent with the natural rarity of sarcasm in news text.
+
+\subsection{Dataset Balancing}
+\label{subsec:balancing}
+
+Class imbalance in binary classification datasets is a well-documented challenge that can lead models to optimise recall on the majority class at the expense of the minority class \citep{pedregosa2011scikit}. Since sarcastic articles represent a small minority of news content, the pre-balancing dataset was dominated by non-sarcastic examples.
+
+To produce a balanced benchmark suitable for fair evaluation, undersampling was applied to the non-sarcastic class: non-sarcastic samples were randomly drawn without replacement to match the number of sarcastic samples. The final balanced dataset contains 2,732 records, evenly split between the two classes, as shown in Table~\ref{tab:sarcasm_dataset}.
+
+\begin{table}[H]
+    \centering
+    \caption{Final balanced Albanian sarcasm dataset.}
+    \label{tab:sarcasm_dataset}
+    \begin{tabular}{lc}
+        \toprule
+        \textbf{Class}        & \textbf{Count} \\
+        \midrule
+        Sarcastic (1)         & 1{,}366 \\
+        Non-sarcastic (0)     & 1{,}366 \\
+        \midrule
+        \textbf{Total}        & \textbf{2{,}732} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The choice of a 50/50 balance reflects the goal of creating a clean binary classification benchmark where no class holds a structural advantage, enabling models to be evaluated on their ability to distinguish sarcastic from non-sarcastic content rather than exploiting prior probability differences. While undersampling reduces the total number of training examples compared to keeping the full non-sarcastic class, the resulting dataset is more tractable for cross-validation and less susceptible to class-imbalance artefacts.
+
+The pipeline for dataset construction---from corpus ingestion through annotation, merging, and balancing---is fully documented and reproducible, addressing RQ3.
+
+%================================================
+\newpage
+\section{Sarcasm Detection Models and Results}
+\label{sec:sarcasm_results}
+
+\subsection{Model Configuration}
+\label{subsec:model_config}
+
+All sarcasm detection experiments operate on the \texttt{content} column of the balanced dataset (2,732 rows, 50/50 class split). The evaluation protocol follows the five-fold stratified cross-validation scheme described in Section~\ref{subsec:evaluation}.
+
+For the classical ML pipeline, TF-IDF features are extracted using a unigram vocabulary of up to 50,000 terms with sub-linear TF scaling. Three classifiers are evaluated: LinearSVC ($C=1.0$), Logistic Regression (with $\ell_2$ regularisation, $C=1.0$), and Multinomial Naive Bayes ($\alpha=1.0$ Laplace smoothing). All implementations use scikit-learn \citep{pedregosa2011scikit}.
+
+For the Transformer models, DistilBERT multilingual is fine-tuned on each training fold for 3 epochs with a batch size of 16 and a learning rate of $2\times10^{-5}$, using the AdamW optimiser with linear learning rate warm-up over the first 10\% of training steps. Input texts are tokenised with the DistilBERT multilingual tokeniser and truncated to a maximum length of 512 tokens.
+
+Listing~\ref{lst:inference} provides an example of the inference workflow for the LinearSVC model, demonstrating how the trained artefacts can be loaded and applied to new Albanian text.
+
+\begin{lstlisting}[style=pythonstyle, caption={Example inference using the trained LinearSVC sarcasm detector.}, label={lst:inference}]
+from joblib import load
+
+vectorizer = load("models/tfidf_vectorizer.joblib")
+model      = load("models/sarcasm_linearsvc.joblib")
+
+text = "Premtimet u realizuan aq shpejt sa qytetaret ende po i presin."
+# Translation: "The promises were fulfilled so quickly that citizens
+# are still waiting for them."
+
+features   = vectorizer.transform([text])
+prediction = model.predict(features)[0]
+label      = "sarcastic" if prediction == 1 else "non-sarcastic"
+print(label)
+\end{lstlisting}
+
+\subsection{Results}
+\label{subsec:sarcasm_results}
+
+Table~\ref{tab:sarcasm} presents the sarcasm detection results for all evaluated models under five-fold stratified cross-validation. Accuracy, macro-averaged F1 score, macro-averaged precision, and macro-averaged recall are reported.
+
+\begin{table}[H]
+    \centering
+    \caption{Sarcasm detection results (5-fold stratified cross-validation, balanced dataset, $n=2{,}732$).}
+    \label{tab:sarcasm}
+    \begin{tabular}{lcccc}
+        \toprule
+        \textbf{Model} & \textbf{Accuracy (\%)} & \textbf{Macro F1 (\%)} & \textbf{Precision (\%)} & \textbf{Recall (\%)} \\
+        \midrule
+        \textbf{LinearSVC}          & \textbf{83.05} & \textbf{83.03} & \textbf{83.25} & \textbf{83.05} \\
+        Logistic Regression         & $\approx$80.00 & $\approx$80.00 & ---            & ---            \\
+        Multinomial Naive Bayes     & $\approx$75.00 & $\approx$75.00 & ---            & ---            \\
+        DistilBERT multilingual     & 79.72          & $\approx$79.00 & ---            & ---            \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+LinearSVC achieves the best performance across all reported metrics, with 83.05\% accuracy and 83.03\% macro F1. Logistic Regression attains approximately 80\% accuracy, representing a modest but consistent drop relative to LinearSVC. Multinomial Naive Bayes scores approximately 75\%, consistent with its weaker performance on tasks requiring nuanced discrimination between semantically similar categories.
+
+Critically, DistilBERT multilingual achieves 79.72\% accuracy---2.33 percentage points below LinearSVC. This confirms the central hypothesis of this thesis: under conditions of limited labelled data, a classical linear model with TF-IDF features outperforms a pre-trained multilingual Transformer. The same ordering was observed in the category classification task, where LinearSVC (72.37\%) outperformed XLM-RoBERTa (60.61\%), suggesting that this is a systematic rather than task-specific phenomenon.
+
+The performance gap can be attributed to two complementary factors. On the classical side, TF-IDF with LinearSVC benefits from the complete article text without sequence length constraints, the relative simplicity of the task boundary in feature space, and the regularising effect of the linear margin. On the Transformer side, fine-tuning a model with 66 million parameters on approximately 2,185 training examples per fold (80\% of 2,732) may be insufficient to adapt the pre-trained representations to the nuances of Albanian sarcasm, despite the Albanian language coverage in the pre-training corpus.
+
+\subsection{Error Analysis}
+\label{subsec:error_analysis}
+
+To understand the qualitative failure modes of the best-performing model (LinearSVC), an analysis of the confusion matrix across cross-validation folds is conducted. The analysis reveals a consistent asymmetry between the two classes:
+
+\begin{itemize}[itemsep=0.3em]
+    \item \textbf{Non-sarcastic class:} The model correctly identifies approximately 86.7\% of non-sarcastic articles, with 13.3\% being misclassified as sarcastic (false positives).
+    \item \textbf{Sarcastic class:} The model correctly identifies approximately 79.4\% of sarcastic articles, with 20.6\% being misclassified as non-sarcastic (false negatives).
+\end{itemize}
+
+The lower recall for the sarcastic class is consistent with the inherent difficulty of sarcasm detection: sarcastic texts are, by definition, designed to appear literal on the surface. TF-IDF representations are inherently unable to capture the contextual incongruity that defines sarcasm; they can only detect statistical associations between word distributions and class labels. Articles where sarcasm is expressed through subtle lexical choices that overlap with non-sarcastic vocabulary---rather than through salient ironic markers---are the most likely to be misclassified.
+
+False positives (non-sarcastic articles misclassified as sarcastic) tend to arise from articles with hyperbolic or emotionally charged language in the context of political reporting, where the vocabulary distribution happens to resemble that of sarcastic texts. This observation suggests that future work incorporating contextual signals---such as knowledge of the article's subject matter, the author's historical tone, and the specific political context---could yield meaningful improvements.
+
+The figure below illustrates a conceptual representation of the confusion matrix for the LinearSVC model.
+
+\begin{figure}[H]
+    \centering
+    \fbox{\rule{0pt}{5cm}\rule{9cm}{0pt}}
+    \caption{Confusion matrix for LinearSVC on the Albanian sarcasm dataset (averaged over 5-fold cross-validation). Rows correspond to true labels; columns to predicted labels. Values shown are percentages within each true class.}
+    \label{fig:confusion_matrix}
+\end{figure}
+
+%================================================
+\newpage
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Key Findings}
+\label{subsec:findings}
+
+This thesis yields four principal findings that collectively advance the understanding of Albanian NLP and sarcasm detection under low-resource conditions.
+
+\paragraph{Finding 1: Classical linear models are highly effective for Albanian text classification.}
+LinearSVC with TF-IDF features consistently achieves the highest performance across both the sarcasm detection task (83.05\% accuracy) and the category classification task (72.37\% on 181 classes). This finding addresses RQ1 affirmatively: classical machine learning models are not merely competitive but represent the current state of the art for Albanian text classification under the data conditions examined in this study. The strong performance of TF-IDF-based approaches can be attributed to the richness of lexical variation in Albanian news text, where topic-specific vocabulary is highly discriminative, and the efficiency of linear classifiers in high-dimensional sparse feature spaces.
+
+\paragraph{Finding 2: Multilingual Transformers do not dominate under limited annotated data.}
+XLM-RoBERTa and DistilBERT multilingual, despite their extensive pre-training and demonstrated effectiveness on many NLP benchmarks, are outperformed by LinearSVC in both experimental settings. This confirms the hypothesis stated in Section~\ref{sec:rq} and the observation of \citet{hedderich2021survey} that the benefit of large models is contingent on the availability of sufficient fine-tuning data. With approximately 2,185 training examples per fold (for the sarcasm task) or a large but highly distributed training set (for the 181-class category task), the Transformer models appear to be operating in a low-data regime where their contextual representations cannot be effectively adapted.
+
+This finding has practical implications for the broader NLP community working with low-resource languages: researchers should not assume that Transformer-based models will automatically outperform simpler baselines, particularly when annotated data are scarce. Computational resources invested in Transformer fine-tuning may yield lower returns than expanding the labelled dataset or improving feature engineering.
+
+\paragraph{Finding 3: A reproducible Albanian sarcasm dataset can be constructed from available sources.}
+The multi-stage pipeline combining OpenAI-assisted annotation with heuristic labelling from FLOSSK historical sources demonstrates that a usable sarcasm dataset can be assembled for a low-resource language without full manual annotation by a large team. The resulting balanced dataset of 2,732 samples enables meaningful supervised learning experiments and provides a foundation for future expansion. This addresses RQ3.
+
+\paragraph{Finding 4: Category classification across 181 or 274 classes is feasible for Albanian news.}
+The 72.37\% accuracy achieved by LinearSVC on 181 classes establishes the first documented baseline for fine-grained Albanian news category classification. This result, while acknowledging the challenge of the large label space and the inconsistencies in the original editorial taxonomy, provides a useful reference point for future work.
+
+\subsection{Limitations}
+\label{subsec:limitations}
+
+The results of this study must be interpreted in light of several limitations.
+
+\paragraph{Dataset size.}
+The balanced sarcasm dataset contains only 2,732 samples, which is small by the standards of modern deep learning. While the five-fold cross-validation protocol provides more stable estimates than a single split, the absolute number of training examples per fold ($\approx$2,185) may be insufficient for Transformer fine-tuning. A larger dataset---ideally one or two orders of magnitude larger---would provide a stronger foundation for both classical and Transformer-based models.
+
+\paragraph{Label quality.}
+The sarcasm labels in this dataset are derived from two imperfect sources: an OpenAI-assisted annotation workflow, which introduces the biases and limitations of the underlying language model as an annotator, and a heuristic distant supervision strategy, which assigns labels based on surface lexical features rather than true sarcastic intent. Inter-annotator agreement figures are not available, as the annotation process was primarily automated. The combination of two annotation strategies with different label reliability profiles may introduce systematic noise.
+
+\paragraph{Source heterogeneity.}
+The sarcasm dataset combines articles from two distinct source types---contemporary online news (from the Kaggle corpus) and historical textual sources (from FLOSSK archives). These sources differ in writing style, register, and vocabulary, which may introduce distributional variation that complicates generalisation.
+
+\paragraph{Transformer fine-tuning scope.}
+Due to computational constraints, Transformer models were not subjected to extensive hyperparameter search. It is possible that different learning rates, batch sizes, or the use of adapters or parameter-efficient fine-tuning methods could improve Transformer performance. The comparison with classical models is therefore conservative with respect to the Transformer side.
+
+%================================================
+\newpage
+\section{Conclusions and Future Work}
+\label{sec:conclusions}
+
+This thesis has investigated sarcasm detection and news article category classification in Albanian, a low-resource language for which no prior work on figurative language detection existed. The study makes three principal contributions: (1) a reproducible multi-stage pipeline for constructing a clean Albanian news corpus from a raw dataset of 2.59 million articles; (2) the first documented balanced Albanian sarcasm dataset, containing 2,732 samples with an equal split between sarcastic and non-sarcastic articles; and (3) a systematic evaluation of classical machine learning and multilingual Transformer models on both tasks under rigorous cross-validation.
+
+The experimental results confirm the central hypothesis of the study: under conditions of limited annotated data, classical linear models with TF-IDF features outperform multilingual Transformer architectures. LinearSVC achieves 83.05\% accuracy and 83.03\% macro F1 on the sarcasm detection task, surpassing DistilBERT multilingual (79.72\%). The same model achieves 72.37\% accuracy on the 181-class category classification benchmark, outperforming XLM-RoBERTa (60.61\%). These results provide clear answers to the three research questions: classical models are effective for Albanian NLP (RQ1); they outperform multilingual Transformers under limited data (RQ2); and a stable pipeline for Albanian sarcasm dataset construction is feasible (RQ3).
+
+The findings have practical implications beyond the Albanian language: they underscore the importance of benchmarking simple baselines before investing computational resources in large model fine-tuning, particularly in low-resource settings where annotated data are inherently scarce. The pipeline and dataset described in this thesis are released to support future research.
+
+Several directions for future work are identified:
+
+\begin{itemize}[itemsep=0.3em]
+    \item \textbf{Dataset expansion and expert annotation.} The sarcasm dataset should be expanded to at least 10,000--20,000 samples, with labels assigned by trained human annotators rather than automated workflows. Measuring inter-annotator agreement would provide a principled estimate of the task's inherent difficulty.
+
+    \item \textbf{Dedicated Albanian language models.} The development or fine-tuning of a language model specifically trained on large volumes of Albanian text---potentially using current multilingual corpora supplemented by Albanian-specific data---would provide contextual representations better suited to Albanian morphology and pragmatics.
+
+    \item \textbf{Context-aware and multi-modal sarcasm detection.} Future models should incorporate extra-textual signals such as publication context, authorial history, topic background knowledge, and cross-article discourse structure. Grounding sarcasm detection in factual world knowledge (e.g., identifying when a positive statement contradicts known facts) could substantially improve recall for subtle sarcasm.
+
+    \item \textbf{Parameter-efficient Transformer fine-tuning.} Approaches such as LoRA (Low-Rank Adaptation) or prefix tuning enable Transformer models to be adapted to downstream tasks with far fewer learnable parameters, potentially improving generalisation under limited data. These methods should be evaluated on the Albanian sarcasm dataset in future work.
+
+    \item \textbf{Irony spectrum modelling.} Rather than treating sarcasm as a binary phenomenon, future datasets and models could distinguish between degrees or types of figurative language---mild irony, sarcasm, satire, hyperbole---providing a richer understanding of figurative language in Albanian news.
+\end{itemize}
+
+In conclusion, this work demonstrates that automatic sarcasm detection in Albanian is feasible, establishes the first benchmarks for this task, and provides a methodological foundation upon which future research can build. The central lesson---that simple, interpretable models remain powerful tools in the low-resource NLP practitioner's toolkit---extends beyond the specific language studied here and has relevance for the broader field.
+
+%================================================
+\newpage
+\bibliography{references}
+
+\end{document}
